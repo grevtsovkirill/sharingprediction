@@ -40,8 +40,30 @@ class HistoricalData:
         
         #def prep_ds(self):
         
-        
+class ModelDataPrep:
+    def __init__(self, df, varlist, target='cnt', splittype='year'):
+        self.df = df
+        self.varlist = varlist
+        self.target = target        
+        self.splittype = splittype
 
+    def gen_sample(self, d ):
+        X = d[self.varlist]
+        Y = d[self.target]
+        return X,Y
+    
+    def set_split(self):
+        if self.splittype == 'year':
+            train = self.df.loc[self.df.yr==0]
+            test = self.df.loc[self.df.yr==1]
+            x_train,y_train = self.gen_sample(train)            
+            x_test,y_test = self.gen_sample(test)
+            
+        self.X_train = x_train
+        self.Y_train = y_train
+        self.X_test = x_test
+        self.Y_test = y_test
+        
 def plot_over_time(data,var,time='hr',lab_str=''):
     df1 = data.sort_values(time, ascending=True)
     lab_str = lab_str
@@ -119,7 +141,13 @@ def main():
         
         cor_plot(ds1,list_cor)
         scat_plot(ds1, ['hr','temp','weekday'])
+
+    if process_type=='train':
+        varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
+        data = ModelDataPrep(ds,varlist)
+        #X_train, X_test, y_train, y_test =
+        data.set_split()
+        print(data.X_train.head())
+        
 if __name__ == "__main__":
     main()
-
-    
