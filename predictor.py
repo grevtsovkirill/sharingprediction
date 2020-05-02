@@ -3,7 +3,10 @@ from pandas.plotting import scatter_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+import xgboost
+from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
 seed=8
 np.random.seed(seed)
 
@@ -47,9 +50,21 @@ class ModelDataPrep:
         self.target = target        
         self.splittype = splittype
 
+        xx = self.df[self.varlist]
+        xsc = StandardScaler().fit(xx)
+        self.xsc = xsc
+        yy = self.df[self.target]
+        yy = np.array(yy) 
+        ysc = StandardScaler().fit(yy.reshape(-1, 1))
+        self.ysc = ysc
+
+
     def gen_sample(self, d ):
         X = d[self.varlist]
         Y = d[self.target]
+        X = self.xsc.transform(X)
+        Y = np.array(Y)
+        Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
         return X,Y
     
     def set_split(self):
@@ -120,6 +135,14 @@ def scat_plot(ds,variablelist):
     plt.savefig("Plots/scat_"+name+".png", transparent=True)
     plt.close("scat") 
 
+
+def build_model(X,y):
+  model = xgboost.XGBRegressor()
+  # best_pars = GridSearchCV(model, {"colsample_bytree":[1.0],"min_child_weight":[1.0,1.2]
+  #                               ,'max_depth': [3,4,6], 'n_estimators': [500,1000]}, verbose=1)
+  # best_pars.fit(X,y)
+  # model = xgboost.XGBRegressor(**best_pars.best_params_)
+  return model        
     
     
         
@@ -145,9 +168,13 @@ def main():
     if process_type=='train':
         varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
         data = ModelDataPrep(ds,varlist)
-        #X_train, X_test, y_train, y_test =
         data.set_split()
-        print(data.X_train.head())
-        
+
+        print(data.Y_test[:5])
+        model = build_model(data.X_train, data.Y_train)
+        model.fit(data.X_train, data.Y_train)
+        Y_pred = model.predict(data.X_test)
+        print(Y_pred[:5],data.Y_test[:5])
+        print(model.score(data.X_test,data.Y_test))
 if __name__ == "__main__":
     main()
