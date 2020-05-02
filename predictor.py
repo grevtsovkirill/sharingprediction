@@ -39,9 +39,10 @@ class HistoricalData:
         #df.loc[:,'fulldteday'] = 
         return df
 
-    def split_train_test(self):
-        df_all = self.read_all_data()
-        
+    def convert_season(self,df):
+        df = self.read_all_data()
+        df = pd.concat([df,pd.get_dummies(df['season'], prefix='season')],axis=1)
+        return df
         #def prep_ds(self):
         
 class ModelDataPrep:
@@ -115,11 +116,12 @@ def plot_per_season(ds1):
     colors = ("blue", "green", "red","orange")
     groups = ("winter", "spring", "summer","autumn")
     plt.figure("response")        
-    for data, color, group in zip(data, colors, groups):
-        x, y = data
-        plt.scatter(x,y, c=color, label=group,  alpha=0.5, s=30)
-    plt.legend(loc=2)
-    #plt.show()    
+    #for data, color, group in zip(data, colors, groups):
+        #x, y = data
+        #plt.scatter(x,y, c=color, label=group,  alpha=0.5, s=30)
+        #plt.legend(loc=2)
+    #plt.show()
+    sns.catplot(x="season", y="temp", hue="yr",  data=ds1);
     plt.savefig("Plots/season.png", transparent=True)
     plt.close("response")
 
@@ -169,18 +171,20 @@ def main():
     histdata = HistoricalData(data_path,filename)
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
+    ds = histdata.convert_season(ds)
     if process_type=='plot':
         print(ds[:25])
         ds1 = ds.copy() #
         max_cnt_val = ds1.cnt.max()
         ds1.loc[:,'ncnt'] = ds1.loc[:,'cnt']/max_cnt_val
         # plot_over_time(ds1,['ncnt', 'temp'],'instant') #
-        # plot_per_season(ds1)
+        #plot_per_season(ds1)
         # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
-        plot_all(ds1)
-
+        #plot_all(ds1)
+        print(ds1.loc[(ds1.atemp<0.35) & (ds1.yr==1) & (ds1.season==3)])
+        
     if process_type=='train':
         varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
         data = ModelDataPrep(ds,varlist)
