@@ -41,11 +41,22 @@ class HistoricalData:
         return df
 
     def convert_season(self,df):
-        df = self.read_all_data()
         df = pd.concat([df,pd.get_dummies(df['season'], prefix='season')],axis=1)
         return df
         #def prep_ds(self):
 
+    def convert_hr(self,df):
+        df = pd.concat([df,pd.get_dummies(df['hr'], prefix='hr')],axis=1)
+        return df
+
+    def convert_mnth(self,df):
+        df = pd.concat([df,pd.get_dummies(df['mnth'], prefix='mnth')],axis=1)
+        return df
+
+    def convert_weekday(self,df):
+        df = pd.concat([df,pd.get_dummies(df['weekday'], prefix='weekday')],axis=1)
+        return df
+    
     def transform_target(self,df):
         df.loc[:,'ncnt'] = np.log(df.loc[:,'cnt'])
         return df  
@@ -200,6 +211,9 @@ def main():
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
     ds = histdata.convert_season(ds)
+    ds = histdata.convert_hr(ds)
+    ds = histdata.convert_mnth(ds)
+    ds = histdata.convert_weekday(ds)
     ds = histdata.transform_target(ds)
     if process_type=='plot':
         print(ds[:25])
@@ -220,7 +234,12 @@ def main():
         print("workingday: 1 = ",len(ds1.loc[ds1.workingday==1]),", 0 = ",len(ds1.loc[ds1.workingday==0]), ", mon-fr = ",len(ds1.loc[ds1.weekday<5]),", st+sund = ",len(ds1.loc[ds1.weekday>4]), ", hol = ",len(ds1.loc[ds1.holiday==1]),)
         
     if process_type=='train':
-        varlist = ['season_1','season_2','season_3','season_4','hr','weekday','weathersit','temp','hum','windspeed']
+        #varlist = ['season_1','season_2','season_3','season_4','hr','weekday','weathersit','temp','hum','windspeed']
+        full_list = ds.columns
+        print(full_list)
+        to_del = ['dteday','fulldteday','season','mnth','instant','dteda','atemp','weekday','holiday','cnt','ncnt','casual','registered']
+        varlist = list(set(full_list)-set(to_del))
+        print("final list: ", varlist)
         data = ModelDataPrep(ds,varlist,'ncnt','null')
         data.set_split()
 
