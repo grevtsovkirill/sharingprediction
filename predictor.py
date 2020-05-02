@@ -44,6 +44,10 @@ class HistoricalData:
         df = pd.concat([df,pd.get_dummies(df['season'], prefix='season')],axis=1)
         return df
         #def prep_ds(self):
+
+    def transform_target(self,df):
+        df.loc[:,'ncnt'] = np.log(df.loc[:,'cnt'])
+        return df  
         
 class ModelDataPrep:
     def __init__(self, df, varlist, target='cnt', splittype='year'):
@@ -107,23 +111,12 @@ def plot_over_time(data,var,time='hr',lab_str=''):
     
     plt.savefig("Plots/tmp.png", transparent=True)
 
-def plot_per_season(ds1):
-    s={}        
-    for i in range(1,5):
-        s[i] = (ds1.loc[ds1.season==i].ncnt, ds1.loc[ds1.season==i].temp)
-        
-    data = (s[1],s[2],s[3],s[4])
-    colors = ("blue", "green", "red","orange")
-    groups = ("winter", "spring", "summer","autumn")
-    plt.figure("response")        
-    #for data, color, group in zip(data, colors, groups):
-        #x, y = data
-        #plt.scatter(x,y, c=color, label=group,  alpha=0.5, s=30)
-        #plt.legend(loc=2)
-    #plt.show()
-    sns.catplot(x="season", y="temp", hue="yr",  data=ds1);
-    plt.savefig("Plots/season.png", transparent=True)
-    plt.close("response")
+def plot_per_season(ds1,varlist,hvar="yr"):
+    for i in varlist:
+        plt.figure(i)        
+        sns.catplot(x="season", y=i, hue=hvar,  data=ds1);
+        plt.savefig("Plots/season/season_"+hvar+"_"+i+".png", transparent=True)
+        plt.close(i)
 
 
 def cor_plot(ds,variablelist_all):
@@ -172,18 +165,20 @@ def main():
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
     ds = histdata.convert_season(ds)
+    ds = histdata.transform_target(ds)
     if process_type=='plot':
         print(ds[:25])
         ds1 = ds.copy() #
-        max_cnt_val = ds1.cnt.max()
-        ds1.loc[:,'ncnt'] = ds1.loc[:,'cnt']/max_cnt_val
         # plot_over_time(ds1,['ncnt', 'temp'],'instant') #
-        #plot_per_season(ds1)
+        for i_var in ['hr','holiday','weekday','workingday']:
+            plot_per_season(ds1,['temp','atemp','hum','windspeed','cnt'],i_var)
+            
         # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
         #plot_all(ds1)
-        print(ds1.loc[(ds1.atemp<0.35) & (ds1.yr==1) & (ds1.season==3)])
+        #print(ds1.loc[(ds1.atemp<0.35) & (ds1.yr==1) & (ds1.season==3)])
+        #print(len(ds1.loc[ds1.yr==1])," ",len(ds1.loc[ds1.yr==0]))
         
     if process_type=='train':
         varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
