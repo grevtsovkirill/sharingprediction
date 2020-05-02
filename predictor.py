@@ -82,10 +82,16 @@ class ModelDataPrep:
 
 def plot_all(data):
     varlist = data.select_dtypes(include='number').columns
+    print("N_num_cols=",len(varlist))
     for i in varlist:
         plt.figure(i) 
         sns.distplot(data[i])
-        plt.savefig("Plots/"+i+".png", transparent=True)
+        if i in ['season','yr','mnth','hr','holiday','weekday','workingday','weathersit']:
+            print(i,' = ',len(data[i].unique()))
+            sns.distplot(data[i],bins=len(data[i].unique()), kde=False)
+        #plt.plot(data[i])
+        #plt.hist(data[i])
+        plt.savefig("Plots/raw/"+i+".png", transparent=True)
         plt.close(i) 
     
     #print(varlist)
@@ -164,7 +170,7 @@ def main():
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
     if process_type=='plot':
-        print(ds.head())
+        print(ds[:25])
         ds1 = ds.copy() #
         max_cnt_val = ds1.cnt.max()
         ds1.loc[:,'ncnt'] = ds1.loc[:,'cnt']/max_cnt_val
