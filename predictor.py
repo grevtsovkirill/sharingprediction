@@ -153,6 +153,16 @@ def weekday_feature(ds,var,hvar):
     plt.savefig("Plots/days/weekday_"+var+".png", transparent=True)
     plt.close(var)
     
+def day_hour_feature(ds,var,seas):
+    plt.figure(var)
+    #map_df = ds.loc[ds.season==seas].pivot('weekday','hr',var)
+    ordered_days = ds.weekday.value_counts().index
+    g = sns.FacetGrid(ds.loc[ds.season==seas], row="weekday") #, row_order=ordered_days, height=1.7, aspect=4)
+    g.map(sns.distplot, "hr", hist=True, rug=True);
+    #sns.heatmap(map_df)
+    plt.savefig("Plots/days/dh_"+var+"_"+str(seas)+".png", transparent=True)
+    plt.close(var)
+    
     
 def test_hr(df):
     val = sum(range(24))
@@ -195,6 +205,7 @@ def main():
             
         #test_hr(ds1)
         weekday_feature(ds1,'ncnt','season')
+        day_hour_feature(ds1,'ncnt',1)
         # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
