@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import xgboost
+import pickle
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
@@ -81,7 +83,7 @@ class ModelDataPrep:
     def gen_sample(self, d ):
         X = d[self.varlist]
         Y = d[self.target]
-        X = self.xsc.transform(X)
+        #X = self.xsc.transform(X)
         #Y = np.array(Y)
         #Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
         return X,Y
@@ -194,13 +196,26 @@ def test_hr(df):
 
     print(n_susp, tot_diff)
     
-def build_model(X,y):
-  model = xgboost.XGBRegressor()
-  # best_pars = GridSearchCV(model, {"colsample_bytree":[1.0],"min_child_weight":[1.0,1.2]
-  #                               ,'max_depth': [3,4,6], 'n_estimators': [500,1000]}, verbose=1)
-  # best_pars.fit(X,y)
-  # model = xgboost.XGBRegressor(**best_pars.best_params_)
-  return model        
+def build_model(X,y,opt='def'):
+    model = xgboost.XGBRegressor()
+
+    if opt=='def':
+        with open('model_xgb_def.pickle', 'wb') as f:
+            pickle.dump(model, f)
+
+    elif opt=='opt':
+        best_pars = GridSearchCV(model, {"colsample_bytree":[1.0],"min_child_weight":[1.0,1.2]
+                                         ,'max_depth': [3,4,6], 'n_estimators': [500,1000]}, verbose=1)
+        best_pars.fit(X,y)        
+        model = xgboost.XGBRegressor(**best_pars.best_params_)
+        #model.save('model_xgb_best.h5')
+        with open('model_xgb_best.pickle', 'wb') as f:
+            pickle.dump(model, f)
+    elif opt=='load':
+        with open('model_xgb_best.pickle', 'rb') as f:
+            model = pickle.load(f)
+        
+    return model        
     
     
         
@@ -244,7 +259,7 @@ def main():
         data.set_split()
 
         print(data.Y_test[:5])
-        model = build_model(data.X_train, data.Y_train)
+        model = build_model(data.X_train, data.Y_train,'opt')
         model.fit(data.X_train, data.Y_train)
         Y_pred = model.predict(data.X_test)
         print(Y_pred[:5],data.Y_test[:5])
