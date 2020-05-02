@@ -147,7 +147,27 @@ def scat_plot(ds,variablelist):
     plt.savefig("Plots/scat_"+name+".png", transparent=True)
     plt.close("scat") 
 
+def weekday_feature(ds,var,hvar):
+    plt.figure(var)        
+    sns.catplot(x="weekday", y=var,   hue=hvar, kind="box",data=ds)
+    plt.savefig("Plots/days/weekday_"+var+".png", transparent=True)
+    plt.close(var)
+    
+    
+def test_hr(df):
+    val = sum(range(24))
+    n_susp = 0
+    tot_diff = 0
+    for i in df.dteday.unique():
+        # if df.hr.loc[df.dteday==i].sum() != val:
+        #     print(i,df.hr.loc[df.dteday==i].sum())
+        if len(df.hr.loc[df.dteday==i]) != 24 or df.hr.loc[df.dteday==i].sum() != val:
+            n_susp+=1
+            tot_diff += len(df.hr.loc[df.dteday==i])
+            #print(i,len(df.hr.loc[df.dteday==i])," " , df.hr.loc[df.dteday==i].sum())
 
+    print(n_susp, tot_diff)
+    
 def build_model(X,y):
   model = xgboost.XGBRegressor()
   # best_pars = GridSearchCV(model, {"colsample_bytree":[1.0],"min_child_weight":[1.0,1.2]
@@ -170,15 +190,18 @@ def main():
         print(ds[:25])
         ds1 = ds.copy() #
         # plot_over_time(ds1,['ncnt', 'temp'],'instant') #
-        for i_var in ['hr','holiday','weekday','workingday']:
-            plot_per_season(ds1,['temp','atemp','hum','windspeed','cnt'],i_var)
+        #for i_var in ['yr','workingday']:
+        #    plot_per_season(ds1,['temp','atemp','hum','windspeed','cnt'],i_var)
             
+        #test_hr(ds1)
+        weekday_feature(ds1,'ncnt','season')
         # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
         #plot_all(ds1)
         #print(ds1.loc[(ds1.atemp<0.35) & (ds1.yr==1) & (ds1.season==3)])
-        #print(len(ds1.loc[ds1.yr==1])," ",len(ds1.loc[ds1.yr==0]))
+        print("year", len(ds1.loc[ds1.yr==1])," ",len(ds1.loc[ds1.yr==0]))
+        print("workingday: 1 = ",len(ds1.loc[ds1.workingday==1]),", 0 = ",len(ds1.loc[ds1.workingday==0]), ", mon-fr = ",len(ds1.loc[ds1.weekday<5]),", st+sund = ",len(ds1.loc[ds1.weekday>4]), ", hol = ",len(ds1.loc[ds1.holiday==1]),)
         
     if process_type=='train':
         varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
