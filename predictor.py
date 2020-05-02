@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import xgboost
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
@@ -50,27 +51,28 @@ class HistoricalData:
         return df  
         
 class ModelDataPrep:
-    def __init__(self, df, varlist, target='cnt', splittype='year'):
+    def __init__(self, df, varlist, target='cnt', splittype='year',test_samp_size=0.33):
         self.df = df
         self.varlist = varlist
         self.target = target        
         self.splittype = splittype
+        self.test_samp_size = test_samp_size
 
         xx = self.df[self.varlist]
         xsc = StandardScaler().fit(xx)
         self.xsc = xsc
-        yy = self.df[self.target]
-        yy = np.array(yy) 
-        ysc = StandardScaler().fit(yy.reshape(-1, 1))
-        self.ysc = ysc
+        # yy = self.df[self.target]
+        # yy = np.array(yy) 
+        # ysc = StandardScaler().fit(yy.reshape(-1, 1))
+        # self.ysc = ysc
 
 
     def gen_sample(self, d ):
         X = d[self.varlist]
         Y = d[self.target]
         X = self.xsc.transform(X)
-        Y = np.array(Y)
-        Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
+        #Y = np.array(Y)
+        #Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
         return X,Y
     
     def set_split(self):
@@ -79,6 +81,9 @@ class ModelDataPrep:
             test = self.df.loc[self.df.yr==1]
             x_train,y_train = self.gen_sample(train)            
             x_test,y_test = self.gen_sample(test)
+        else:
+            X,Y = self.gen_sample(self.df)
+            x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = self.test_samp_size)
             
         self.X_train = x_train
         self.Y_train = y_train
@@ -215,8 +220,8 @@ def main():
         print("workingday: 1 = ",len(ds1.loc[ds1.workingday==1]),", 0 = ",len(ds1.loc[ds1.workingday==0]), ", mon-fr = ",len(ds1.loc[ds1.weekday<5]),", st+sund = ",len(ds1.loc[ds1.weekday>4]), ", hol = ",len(ds1.loc[ds1.holiday==1]),)
         
     if process_type=='train':
-        varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
-        data = ModelDataPrep(ds,varlist)
+        varlist = ['season_1','season_2','season_3','season_4','hr','weekday','weathersit','temp','hum','windspeed']
+        data = ModelDataPrep(ds,varlist,'ncnt','null')
         data.set_split()
 
         print(data.Y_test[:5])
