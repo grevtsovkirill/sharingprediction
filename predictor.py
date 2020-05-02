@@ -10,6 +10,7 @@ from sklearn.model_selection import GridSearchCV
 seed=8
 np.random.seed(seed)
 
+import seaborn as sns
 
 
 import argparse
@@ -78,7 +79,17 @@ class ModelDataPrep:
         self.Y_train = y_train
         self.X_test = x_test
         self.Y_test = y_test
-        
+
+def plot_all(data):
+    varlist = data.select_dtypes(include='number').columns
+    for i in varlist:
+        plt.figure(i) 
+        sns.distplot(data[i])
+        plt.savefig("Plots/"+i+".png", transparent=True)
+        plt.close(i) 
+    
+    #print(varlist)
+    
 def plot_over_time(data,var,time='hr',lab_str=''):
     df1 = data.sort_values(time, ascending=True)
     lab_str = lab_str
@@ -157,13 +168,12 @@ def main():
         ds1 = ds.copy() #
         max_cnt_val = ds1.cnt.max()
         ds1.loc[:,'ncnt'] = ds1.loc[:,'cnt']/max_cnt_val
-        plot_over_time(ds1,['ncnt', 'temp'],'instant') #
-        plot_per_season(ds1)
-        print(ds1.holiday.count()," ", len(ds1))
-        list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']
-        
-        cor_plot(ds1,list_cor)
-        scat_plot(ds1, ['hr','temp','weekday'])
+        # plot_over_time(ds1,['ncnt', 'temp'],'instant') #
+        # plot_per_season(ds1)
+        # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
+        # cor_plot(ds1,list_cor)
+        # scat_plot(ds1, ['hr','temp','weekday'])
+        plot_all(ds1)
 
     if process_type=='train':
         varlist = ['hr','weekday','weathersit','temp','hum','windspeed']
