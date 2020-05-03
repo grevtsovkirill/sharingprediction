@@ -16,21 +16,9 @@ class ModelDataPrep:
         self.splittype = splittype
         self.test_samp_size = test_samp_size
 
-        #xx = self.df[self.varlist]
-        #xsc = StandardScaler().fit(xx)
-        #self.xsc = xsc
-        # yy = self.df[self.target]
-        # yy = np.array(yy) 
-        # ysc = StandardScaler().fit(yy.reshape(-1, 1))
-        # self.ysc = ysc
-
-
     def gen_sample(self, d ):
         X = d[self.varlist]
         Y = d[self.target]
-        #X = self.xsc.transform(X)
-        #Y = np.array(Y)
-        #Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
         return X,Y
     
     def set_split(self):
@@ -60,7 +48,6 @@ def build_model(X,y,opt='def'):
                                          ,'max_depth': [3,4,6], 'n_estimators': [500,1000]}, verbose=1)
         best_pars.fit(X,y)        
         model = xgboost.XGBRegressor(**best_pars.best_params_)
-        #model.save('model_xgb_best.h5')
         with open('model_xgb_best.pickle', 'wb') as f:
             pickle.dump(model, f)
     elif opt=='load':

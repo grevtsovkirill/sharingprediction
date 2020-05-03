@@ -14,11 +14,6 @@ class HistoricalData:
         dataset=pd.read_csv(os.path.join(self.data_dir, self.filename))
         return dataset
 
-    def make_full_date(self,df):
-        df.loc[:,'fulldteday'] = df.loc[:,'dteday']
-        #df.loc[:,'fulldteday'] = 
-        return df
-
     def convert_season(self,df):
         df = pd.concat([df,pd.get_dummies(df['season'], prefix='season')],axis=1)
         return df

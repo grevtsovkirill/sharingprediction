@@ -1,12 +1,3 @@
-import pandas as pd
-from pandas.plotting import scatter_matrix
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-
-
-import seaborn as sns
-
 import sharepred as sp
 
 import argparse
@@ -24,7 +15,6 @@ def main():
     filename = 'hour.csv'
     histdata = sp.dataprep.HistoricalData(data_path,filename)
     ds = histdata.read_all_data()
-    ds = histdata.make_full_date(ds)
     ds = histdata.convert_season(ds)
     ds = histdata.convert_hr(ds)
     ds = histdata.convert_mnth(ds)
@@ -40,7 +30,6 @@ def main():
         #test_hr(ds1)
         sp.weekday_feature(ds1,'ncnt','season')
         sp.day_hour_feature(ds1,'ncnt',1)
-        # list_cor = ['hr','holiday','weekday','workingday','weathersit','temp','atemp','hum','windspeed','casual','registered' ,'cnt']        
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
         #plot_all(ds1)
@@ -52,7 +41,7 @@ def main():
         #varlist = ['season_1','season_2','season_3','season_4','hr','weekday','weathersit','temp','hum','windspeed']
         full_list = ds.columns
         print(full_list)
-        to_del = ['dteday','fulldteday','season','mnth','instant','dteda','atemp','weekday','holiday','cnt','ncnt','casual','registered']
+        to_del = ['dteday','season','mnth','instant','dteda','atemp','weekday','holiday','cnt','ncnt','casual','registered']
         varlist = list(set(full_list)-set(to_del))
         print("final list: ", varlist)
         data = sp.ModelDataPrep(ds,varlist,'ncnt','null')
