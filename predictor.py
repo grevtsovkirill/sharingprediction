@@ -15,7 +15,7 @@ np.random.seed(seed)
 
 import seaborn as sns
 
-
+import dataprep 
 import argparse
 parser = argparse.ArgumentParser(description='Prepare classifier')
 parser.add_argument('-t','--type', required=True, type=str, choices=['plot', 'train','read','apply'], help='Choose processing type: explore variable [plot], train the model [train], load previously trained model to do plots [read] or apply existing model [apply] ')
@@ -25,43 +25,6 @@ args = parser.parse_args()
 process_type = vars(args)["type"]
 
 
-class HistoricalData:
-    def __init__(self, data_dir, filename):
-        self.data_dir=data_dir
-        self.filename=filename
-        
-    def read_all_data(self):
-        '''
-        Read all available data
-        '''
-        dataset=pd.read_csv(os.path.join(self.data_dir, self.filename))
-        return dataset
-
-    def make_full_date(self,df):
-        df.loc[:,'fulldteday'] = df.loc[:,'dteday']
-        #df.loc[:,'fulldteday'] = 
-        return df
-
-    def convert_season(self,df):
-        df = pd.concat([df,pd.get_dummies(df['season'], prefix='season')],axis=1)
-        return df
-        #def prep_ds(self):
-
-    def convert_hr(self,df):
-        df = pd.concat([df,pd.get_dummies(df['hr'], prefix='hr')],axis=1)
-        return df
-
-    def convert_mnth(self,df):
-        df = pd.concat([df,pd.get_dummies(df['mnth'], prefix='mnth')],axis=1)
-        return df
-
-    def convert_weekday(self,df):
-        df = pd.concat([df,pd.get_dummies(df['weekday'], prefix='weekday')],axis=1)
-        return df
-    
-    def transform_target(self,df):
-        df.loc[:,'ncnt'] = np.log(df.loc[:,'cnt'])
-        return df  
         
 class ModelDataPrep:
     def __init__(self, df, varlist, target='cnt', splittype='year',test_samp_size=0.33):
@@ -222,7 +185,7 @@ def build_model(X,y,opt='def'):
 def main():
     data_path = '../Bike-Sharing-Dataset/'
     filename = 'hour.csv'
-    histdata = HistoricalData(data_path,filename)
+    histdata = dataprep.HistoricalData(data_path,filename)
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
     ds = histdata.convert_season(ds)
