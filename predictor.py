@@ -3,22 +3,14 @@ from pandas.plotting import scatter_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import xgboost
-import pickle
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score, roc_curve, auc
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
-seed=8
-np.random.seed(seed)
 
 import seaborn as sns
 
 import sharepred as sp
 
 import argparse
-parser = argparse.ArgumentParser(description='Prepare classifier')
+parser = argparse.ArgumentParser(description='Prepare regression for bike sharing prediction')
 parser.add_argument('-t','--type', required=True, type=str, choices=['plot', 'train','read','apply'], help='Choose processing type: explore variable [plot], train the model [train], load previously trained model to do plots [read] or apply existing model [apply] ')
 
 args = parser.parse_args()
@@ -26,69 +18,6 @@ args = parser.parse_args()
 process_type = vars(args)["type"]
 
 
-        
-class ModelDataPrep:
-    def __init__(self, df, varlist, target='cnt', splittype='year',test_samp_size=0.33):
-        self.df = df
-        self.varlist = varlist
-        self.target = target        
-        self.splittype = splittype
-        self.test_samp_size = test_samp_size
-
-        xx = self.df[self.varlist]
-        xsc = StandardScaler().fit(xx)
-        self.xsc = xsc
-        # yy = self.df[self.target]
-        # yy = np.array(yy) 
-        # ysc = StandardScaler().fit(yy.reshape(-1, 1))
-        # self.ysc = ysc
-
-
-    def gen_sample(self, d ):
-        X = d[self.varlist]
-        Y = d[self.target]
-        #X = self.xsc.transform(X)
-        #Y = np.array(Y)
-        #Y = np.squeeze(self.ysc.transform(Y.reshape(-1, 1)))
-        return X,Y
-    
-    def set_split(self):
-        if self.splittype == 'year':
-            train = self.df.loc[self.df.yr==0]
-            test = self.df.loc[self.df.yr==1]
-            x_train,y_train = self.gen_sample(train)            
-            x_test,y_test = self.gen_sample(test)
-        else:
-            X,Y = self.gen_sample(self.df)
-            x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = self.test_samp_size)
-            
-        self.X_train = x_train
-        self.Y_train = y_train
-        self.X_test = x_test
-        self.Y_test = y_test
-    
-def build_model(X,y,opt='def'):
-    model = xgboost.XGBRegressor()
-
-    if opt=='def':
-        with open('model_xgb_def.pickle', 'wb') as f:
-            pickle.dump(model, f)
-
-    elif opt=='opt':
-        best_pars = GridSearchCV(model, {"colsample_bytree":[1.0],"min_child_weight":[1.0,1.2]
-                                         ,'max_depth': [3,4,6], 'n_estimators': [500,1000]}, verbose=1)
-        best_pars.fit(X,y)        
-        model = xgboost.XGBRegressor(**best_pars.best_params_)
-        #model.save('model_xgb_best.h5')
-        with open('model_xgb_best.pickle', 'wb') as f:
-            pickle.dump(model, f)
-    elif opt=='load':
-        with open('model_xgb_best.pickle', 'rb') as f:
-            model = pickle.load(f)
-        
-    return model        
-    
-    
         
 def main():
     data_path = '../Bike-Sharing-Dataset/'
@@ -126,11 +55,11 @@ def main():
         to_del = ['dteday','fulldteday','season','mnth','instant','dteda','atemp','weekday','holiday','cnt','ncnt','casual','registered']
         varlist = list(set(full_list)-set(to_del))
         print("final list: ", varlist)
-        data = ModelDataPrep(ds,varlist,'ncnt','null')
+        data = sp.ModelDataPrep(ds,varlist,'ncnt','null')
         data.set_split()
 
         print(data.Y_test[:5])
-        model = build_model(data.X_train, data.Y_train,'opt')
+        model = sp.build_model(data.X_train, data.Y_train,'load')
         model.fit(data.X_train, data.Y_train)
         Y_pred = model.predict(data.X_test)
         print(Y_pred[:5],data.Y_test[:5])

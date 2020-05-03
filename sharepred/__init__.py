@@ -2,3 +2,4 @@
 
 from .dataprep import *
 from .edaplots import *
+from .modelprep import *
