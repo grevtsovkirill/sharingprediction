@@ -53,5 +53,6 @@ def main():
         Y_pred = model.predict(data.X_test)
         print(Y_pred[:5],data.Y_test[:5])
         print(model.score(data.X_test,data.Y_test))
+
 if __name__ == "__main__":
     main()
