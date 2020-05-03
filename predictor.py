@@ -15,7 +15,8 @@ np.random.seed(seed)
 
 import seaborn as sns
 
-import dataprep 
+import sharepred as sp
+
 import argparse
 parser = argparse.ArgumentParser(description='Prepare classifier')
 parser.add_argument('-t','--type', required=True, type=str, choices=['plot', 'train','read','apply'], help='Choose processing type: explore variable [plot], train the model [train], load previously trained model to do plots [read] or apply existing model [apply] ')
@@ -185,7 +186,7 @@ def build_model(X,y,opt='def'):
 def main():
     data_path = '../Bike-Sharing-Dataset/'
     filename = 'hour.csv'
-    histdata = dataprep.HistoricalData(data_path,filename)
+    histdata = sp.dataprep.HistoricalData(data_path,filename)
     ds = histdata.read_all_data()
     ds = histdata.make_full_date(ds)
     ds = histdata.convert_season(ds)
