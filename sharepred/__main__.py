@@ -1,8 +1,8 @@
-import sharepred as sp
+from sharepred import dataprep, edaplots, modelprep
 
 import argparse
 parser = argparse.ArgumentParser(description='Prepare regression for bike sharing prediction')
-parser.add_argument('-t','--type', required=True, type=str, choices=['plot', 'train','read','apply'], help='Choose processing type: explore variable [plot], train the model [train], load previously trained model to do plots [read] or apply existing model [apply] ')
+parser.add_argument('-t','--type', default='plot', type=str, choices=['plot', 'train','read','apply'], help='Choose processing type: explore variable [plot], train the model [train], load previously trained model to do plots [read] or apply existing model [apply] ')
 
 args = parser.parse_args()
 
@@ -13,7 +13,7 @@ process_type = vars(args)["type"]
 def main():
     data_path = '../Bike-Sharing-Dataset/'
     filename = 'hour.csv'
-    histdata = sp.dataprep.HistoricalData(data_path,filename)
+    histdata = dataprep.HistoricalData(data_path,filename)
     ds = histdata.read_all_data()
     ds = histdata.convert_season(ds)
     ds = histdata.convert_hr(ds)
@@ -28,8 +28,8 @@ def main():
         #    plot_per_season(ds1,['temp','atemp','hum','windspeed','cnt'],i_var)
             
         #test_hr(ds1)
-        sp.weekday_feature(ds1,'ncnt','season')
-        sp.day_hour_feature(ds1,'ncnt',1)
+        edaplots.weekday_feature(ds1,'ncnt','season')
+        edaplots.day_hour_feature(ds1,'ncnt',1)
         # cor_plot(ds1,list_cor)
         # scat_plot(ds1, ['hr','temp','weekday'])
         #plot_all(ds1)
@@ -44,11 +44,11 @@ def main():
         to_del = ['dteday','season','mnth','instant','dteda','atemp','weekday','holiday','cnt','ncnt','casual','registered']
         varlist = list(set(full_list)-set(to_del))
         print("final list: ", varlist)
-        data = sp.ModelDataPrep(ds,varlist,'ncnt','null')
+        data = modelprep.ModelDataPrep(ds,varlist,'ncnt','null')
         data.set_split()
 
         print(data.Y_test[:5])
-        model = sp.build_model(data.X_train, data.Y_train,'load')
+        model = modelprep.build_model(data.X_train, data.Y_train,'load')
         model.fit(data.X_train, data.Y_train)
         Y_pred = model.predict(data.X_test)
         print(Y_pred[:5],data.Y_test[:5])
